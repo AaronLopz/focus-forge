@@ -214,21 +214,28 @@ function App() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <audio id="ambient-audio" loop>
-            <source src="https://stream.zeno.fm/0890f5u7u0hvu" type="audio/mpeg" />
+          <audio id="ambient-audio" loop crossOrigin="anonymous">
+            <source src="https://stream.zeno.fm/f36p873hb8hvu" type="audio/mpeg" />
           </audio>
           <button 
+            id="play-button"
             onClick={() => {
               const audio = document.getElementById('ambient-audio');
+              const btn = document.getElementById('play-button');
               if (audio.paused) {
-                audio.play();
-                audio.volume = 0.3;
+                audio.play().then(() => {
+                  audio.volume = 0.4;
+                  btn.innerText = lang === 'en' ? 'STOP MUSIC' : 'PARAR MÚSICA';
+                  btn.style.background = 'var(--accent)';
+                }).catch(e => console.error("Error playing audio:", e));
               } else {
                 audio.pause();
+                btn.innerText = lang === 'en' ? 'PLAY LOFI' : 'REPRODUCIR LOFI';
+                btn.style.background = 'var(--primary)';
               }
             }}
             className="glass-card"
-            style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', fontWeight: 'bold', background: 'var(--primary)', color: 'var(--bg-deep)' }}
+            style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', fontWeight: 'bold', background: 'var(--primary)', color: 'var(--bg-deep)', minWidth: '140px' }}
           >
             {lang === 'en' ? 'PLAY LOFI' : 'REPRODUCIR LOFI'}
           </button>
