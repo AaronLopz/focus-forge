@@ -22,9 +22,9 @@ const subjects = [
 ];
 
 const channels = [
-  { id: 'rain', label: 'Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-  { id: 'lofi', label: 'Lofi', url: 'https://stream.zeno.fm/f36p873hb8hvu' },
-  { id: 'nature', label: 'Nature', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+  { id: 'lofi', label: 'Lofi Focus', videoId: 'jfKfPfyJRdk' },
+  { id: 'rain', label: 'Rain Deep', videoId: 'mPZkdNFkNps' },
+  { id: 'nature', label: 'Nature', videoId: 'vPhg6sc1Mk4' }
 ];
 
 function App() {
@@ -36,10 +36,10 @@ function App() {
   const { secondsLeft, isActive, status, startTimer, resetTimer, setSecondsLeft } = useFocusTimer(sessionMins);
   const [history, setHistory] = useState([]);
 
+  // YouTube Audio States
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.4);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
-  const audioRef = useRef(null);
+  const iframeRef = useRef(null);
 
   useEffect(() => {
     setHistory(JSON.parse(localStorage.getItem('focus_history') || '[]'));
@@ -51,38 +51,13 @@ function App() {
     }
   }, [sessionMins, isActive]);
 
-  useEffect(() => {
-    if (audioRef.current) {
-        audioRef.current.volume = volume;
-    }
-  }, [volume]);
-
   const toggleMusic = () => {
-    if (audioRef.current.paused) {
-      audioRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(e => console.error("Playback failed:", e));
-    } else {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const changeChannel = (channel) => {
-    const wasPlaying = isPlaying;
     setCurrentChannel(channel);
-    
-    // We need to wait for the state update to reflect the new src in the audio element
-    setTimeout(() => {
-        if (audioRef.current) {
-            audioRef.current.load();
-            if (wasPlaying) {
-                audioRef.current.play()
-                    .then(() => setIsPlaying(true))
-                    .catch(e => console.error(e));
-            }
-        }
-    }, 0);
+    setIsPlaying(true);
   };
 
   const formatTime = (seconds) => {
@@ -206,36 +181,45 @@ function App() {
         </div>
       </main>
 
-      <div className="glass-card" style={{ width: '100%', marginTop: '2rem', padding: '2rem' }}>
+      <div className="glass-card" style={{ width: '100%', marginTop: '2rem', padding: '1.5rem', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-             <div className={`visualizer ${isPlaying ? 'active' : ''}`} style={{ display: 'flex', gap: '3px', height: '30px', alignItems: 'flex-end' }}>
-                {[1,2,3,4,5].map(i => <div key={i} className="vis-bar" style={{ width: '4px', background: 'var(--primary)', borderRadius: '2px' }}></div>)}
+             <div className={`visualizer ${isPlaying ? 'active' : ''}`} style={{ display: 'flex', gap: '3px', height: '20px', alignItems: 'flex-end' }}>
+                {[1,2,3,4,5].map(i => <div key={i} className="vis-bar" style={{ width: '3px', background: 'var(--primary)', borderRadius: '2px' }}></div>)}
              </div>
              <div>
-                <h4 style={{ fontSize: '0.9rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{currentChannel.label} • {isPlaying ? (lang === 'en' ? 'Playing' : 'Sonando') : (lang === 'en' ? 'Paused' : 'Pausado')}</p>
+                <h4 style={{ fontSize: '0.85rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
+                <p style={{ fontSize: '0.65rem', color: 'var(--text-dim)' }}>{currentChannel.label} • {isPlaying ? 'Live' : 'Paused'}</p>
              </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
              {channels.map(c => (
-               <button key={c.id} onClick={() => changeChannel(c)} style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', background: currentChannel.id === c.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: currentChannel.id === c.id ? 'var(--bg-deep)' : 'white', transition: '0.3s' }}>
+               <button key={c.id} onClick={() => changeChannel(c)} style={{ padding: '0.3rem 0.6rem', borderRadius: '6px', fontSize: '0.65rem', background: currentChannel.id === c.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: currentChannel.id === c.id ? 'var(--bg-deep)' : 'white' }}>
                  {c.label}
                </button>
              ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-             <audio ref={audioRef} src={currentChannel.url} loop crossOrigin="anonymous" />
-             <button onClick={toggleMusic} className="glass-card" style={{ width: '55px', height: '55px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <button onClick={toggleMusic} className="glass-card" style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '18px', border: 'none' }}>
                 {isPlaying ? '⏸' : '▶'}
              </button>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '18px' }}>🔊</span>
-                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} style={{ width: '80px', accentColor: 'var(--primary)' }} />
-             </div>
           </div>
+        </div>
+
+        {/* Hidden YouTube Player (Ensures 100% compatibility) */}
+        <div style={{ height: '0px', width: '0px', overflow: 'hidden', position: 'absolute', pointerEvents: 'none' }}>
+          {isPlaying && (
+            <iframe
+              width="1"
+              height="1"
+              src={`https://www.youtube.com/embed/${currentChannel.videoId}?autoplay=1&loop=1&playlist=${currentChannel.videoId}`}
+              title="YouTube Music"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            ></iframe>
+          )}
         </div>
       </div>
 
