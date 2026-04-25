@@ -39,7 +39,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
   const [currentChannel, setCurrentChannel] = useState(channels[0]);
-  const audioRef = useRef(new Audio(channels[0].url));
+  const audioRef = useRef(null);
 
   useEffect(() => {
     setHistory(JSON.parse(localStorage.getItem('focus_history') || '[]'));
@@ -52,18 +52,16 @@ function App() {
   }, [sessionMins, isActive]);
 
   useEffect(() => {
-    audioRef.current.volume = volume;
-    audioRef.current.loop = true;
+    if (audioRef.current) {
+        audioRef.current.volume = volume;
+    }
   }, [volume]);
 
   const toggleMusic = () => {
     if (audioRef.current.paused) {
       audioRef.current.play()
         .then(() => setIsPlaying(true))
-        .catch(e => {
-            alert("Please click anywhere on the page first to enable audio!");
-            console.error(e);
-        });
+        .catch(e => console.error("Playback failed:", e));
     } else {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -71,12 +69,20 @@ function App() {
   };
 
   const changeChannel = (channel) => {
-    audioRef.current.pause();
-    audioRef.current = new Audio(channel.url);
-    audioRef.current.volume = volume;
-    audioRef.current.loop = true;
+    const wasPlaying = isPlaying;
     setCurrentChannel(channel);
-    setIsPlaying(false);
+    
+    // We need to wait for the state update to reflect the new src in the audio element
+    setTimeout(() => {
+        if (audioRef.current) {
+            audioRef.current.load();
+            if (wasPlaying) {
+                audioRef.current.play()
+                    .then(() => setIsPlaying(true))
+                    .catch(e => console.error(e));
+            }
+        }
+    }, 0);
   };
 
   const formatTime = (seconds) => {
@@ -221,6 +227,7 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+             <audio ref={audioRef} src={currentChannel.url} loop crossOrigin="anonymous" />
              <button onClick={toggleMusic} className="glass-card" style={{ width: '55px', height: '55px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>
                 {isPlaying ? '⏸' : '▶'}
              </button>
