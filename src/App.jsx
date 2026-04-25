@@ -203,7 +203,39 @@ function App() {
         </div>
       </section>
 
-      <div className="glass-card" style={{ width: '100%', marginTop: '3rem', padding: '1.5rem' }}>
+      <div className="glass-card" style={{ width: '100%', marginTop: '2rem', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ padding: '0.8rem', background: 'var(--primary)', borderRadius: '50%', color: 'var(--bg-deep)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.9rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{lang === 'en' ? 'Ambient sounds for deep work' : 'Sonidos ambientales para trabajar'}</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <audio id="ambient-audio" loop>
+            <source src="https://stream.zeno.fm/0890f5u7u0hvu" type="audio/mpeg" />
+          </audio>
+          <button 
+            onClick={() => {
+              const audio = document.getElementById('ambient-audio');
+              if (audio.paused) {
+                audio.play();
+                audio.volume = 0.3;
+              } else {
+                audio.pause();
+              }
+            }}
+            className="glass-card"
+            style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', fontWeight: 'bold', background: 'var(--primary)', color: 'var(--bg-deep)' }}
+          >
+            {lang === 'en' ? 'PLAY LOFI' : 'REPRODUCIR LOFI'}
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card" style={{ width: '100%', marginTop: '1rem', padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>{t.statsTitle}</h3>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>{t.statsSubtitle}</span>

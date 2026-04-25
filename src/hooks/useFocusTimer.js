@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { playSuccess, playFailure } from '../utils/audio';
 
 const useFocusTimer = (initialMinutes = 25) => {
   const [secondsLeft, setSecondsLeft] = useState(initialMinutes * 60);
@@ -16,6 +17,7 @@ const useFocusTimer = (initialMinutes = 25) => {
     setIsActive(false);
     setSecondsLeft(initialMinutes * 60);
     setStatus(isFailure ? 'broken' : 'idle');
+    if (isFailure) playFailure();
   };
 
   useEffect(() => {
@@ -27,6 +29,7 @@ const useFocusTimer = (initialMinutes = 25) => {
       clearInterval(timerRef.current);
       setIsActive(false);
       setStatus('success');
+      playSuccess();
     }
 
     return () => clearInterval(timerRef.current);
