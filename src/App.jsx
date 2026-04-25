@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Mascot from './components/Mascot';
 import useFocusTimer from './hooks/useFocusTimer';
+import { translations } from './utils/translations';
 
 const Logo = () => (
   <svg width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -13,14 +14,17 @@ const Logo = () => (
 );
 
 const subjects = [
-  { id: 'general', label: 'Original', icon: '🤖' },
-  { id: 'math', label: 'Math-Bot', icon: '🔢' },
-  { id: 'science', label: 'Science-Probe', icon: '🛸' },
-  { id: 'languages', label: 'Translator', icon: '🌐' },
-  { id: 'literature', label: 'Librarian', icon: '📜' }
+  { id: 'general', label: { en: 'Original', es: 'Original' }, icon: '🤖' },
+  { id: 'math', label: { en: 'Math-Bot', es: 'Mates-Bot' }, icon: '🔢' },
+  { id: 'science', label: { en: 'Science-Probe', es: 'Sonda-Ciencia' }, icon: '🛸' },
+  { id: 'languages', label: { en: 'Translator', es: 'Traductor' }, icon: '🌐' },
+  { id: 'literature', label: { en: 'Librarian', es: 'Bibliotecario' }, icon: '📜' }
 ];
 
 function App() {
+  const [lang, setLang] = useState('en');
+  const t = translations[lang];
+
   const [sessionMins, setSessionMins] = useState(25);
   const [selectedSubject, setSelectedSubject] = useState('general');
   const { secondsLeft, isActive, status, startTimer, resetTimer, setSecondsLeft } = useFocusTimer(sessionMins);
@@ -30,7 +34,6 @@ function App() {
     setHistory(JSON.parse(localStorage.getItem('focus_history') || '[]'));
   }, [status]);
 
-  // Sync time if not active
   useEffect(() => {
     if (!isActive) {
       setSecondsLeft(sessionMins);
@@ -47,19 +50,28 @@ function App() {
 
   return (
     <div className="app-container" style={{ maxWidth: '900px' }}>
-      <header style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
-        <Logo />
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(to right, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
-            FocusForge
-          </h1>
-          <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', letterSpacing: '1px' }}>REFORGING YOUR CONCENTRATION</p>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '3rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Logo />
+          <div>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(to right, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: 0 }}>
+              {t.title}
+            </h1>
+            <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', letterSpacing: '1px' }}>{t.subtitle}</p>
+          </div>
         </div>
+        <button 
+          onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+          className="glass-card"
+          style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--primary)' }}
+        >
+          {lang === 'en' ? '🇺🇸 EN' : '🇪🇸 ES'}
+        </button>
       </header>
 
       <div style={{ width: '100%', display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <div className="glass-card" style={{ flex: '1', minWidth: '250px', padding: '1rem' }}>
-          <label style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.5rem' }}>TIME (MINUTES)</label>
+          <label style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.5rem' }}>{t.timeLabel}</label>
           <input 
             type="number" 
             value={sessionMins} 
@@ -93,7 +105,7 @@ function App() {
                 opacity: isActive && selectedSubject !== s.id ? '0.5' : '1'
               }}
             >
-              {s.icon} {s.label}
+              {s.icon} {s.label[lang]}
             </button>
           ))}
         </div>
@@ -128,7 +140,7 @@ function App() {
                   fontSize: '1.1rem'
                 }}
               >
-                {status === 'broken' ? 'TRY AGAIN' : 'START SESSION'}
+                {status === 'broken' ? t.tryAgainBtn : t.startBtn}
               </button>
             ) : (
               <button 
@@ -142,7 +154,7 @@ function App() {
                   fontWeight: 'bold'
                 }}
               >
-                GIVE UP
+                {t.giveUpBtn}
               </button>
             )}
           </div>
@@ -157,18 +169,30 @@ function App() {
           textAlign: 'center',
           animation: 'shake 0.5s ease-in-out'
         }}>
-          <h2 style={{ marginBottom: '0.5rem' }}>⚠️ FOCUS BROKEN</h2>
-          <p>The tab was switched. The Guardian has reset your progress. You must stay in the forge to succeed.</p>
+          <h2 style={{ marginBottom: '0.5rem' }}>{t.brokenTitle}</h2>
+          <p>{t.brokenDesc}</p>
+        </div>
+      )}
+
+      {status === 'success' && (
+        <div className="alert glass-card" style={{ 
+          color: '#10b981', 
+          border: '1px solid #10b981',
+          marginTop: '2rem',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ marginBottom: '0.5rem' }}>{t.successTitle}</h2>
+          <p>{t.successDesc}</p>
         </div>
       )}
 
       <section className="explanation-section" style={{ marginTop: '4rem', width: '100%' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-dim)' }}>How the Forge Works</h2>
+        <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-dim)' }}>{t.howItWorks}</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
           {[
-            { step: '01', title: 'Start Focus', desc: 'Initiate a custom deep work session.' },
-            { step: '02', title: 'Zero Distractions', desc: 'If you leave the tab, the Guardian resets everything.' },
-            { step: '03', title: 'Forge Success', desc: 'Complete the session to earn stats and improve focus.' }
+            { step: '01', title: t.step1Title, desc: t.step1Desc },
+            { step: '02', title: t.step2Title, desc: t.step2Desc },
+            { step: '03', title: t.step3Title, desc: t.step3Desc }
           ].map((item, i) => (
             <div key={i} className="glass-card" style={{ padding: '1.5rem' }}>
               <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--primary)', opacity: '0.3' }}>{item.step}</div>
@@ -181,16 +205,16 @@ function App() {
 
       <div className="glass-card" style={{ width: '100%', marginTop: '3rem', padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>Concentration Stats</h3>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Stored locally</span>
+          <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>{t.statsTitle}</h3>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>{t.statsSubtitle}</span>
         </div>
         <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px' }}>SESSIONS</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px' }}>{t.sessions}</div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{history.length}</div>
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px' }}>TOTAL MINS</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px' }}>{t.totalMins}</div>
             <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
               {history.reduce((acc, curr) => acc + curr.duration, 0)}
             </div>
@@ -199,7 +223,7 @@ function App() {
       </div>
 
       <footer style={{ marginTop: '4rem', paddingBottom: '2rem', color: 'var(--text-dim)', fontSize: '0.8rem', textAlign: 'center' }}>
-        FOCUSFORGE v2.1 • BUILT FOR DEEP WORK PORTFOLIO
+        {t.footer}
       </footer>
     </div>
   );
