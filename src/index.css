@@ -112,3 +112,18 @@ button:active {
 .animate-shake {
   animation: shake 0.2s ease-in-out infinite;
 }
+
+.visualizer.active .vis-bar {
+  animation: vis-grow 1s infinite ease-in-out;
+}
+
+.visualizer.active .vis-bar:nth-child(1) { animation-delay: 0.1s; height: 10px; }
+.visualizer.active .vis-bar:nth-child(2) { animation-delay: 0.3s; height: 20px; }
+.visualizer.active .vis-bar:nth-child(3) { animation-delay: 0.2s; height: 15px; }
+.visualizer.active .vis-bar:nth-child(4) { animation-delay: 0.4s; height: 25px; }
+.visualizer.active .vis-bar:nth-child(5) { animation-delay: 0.1s; height: 12px; }
+
+@keyframes vis-grow {
+  0%, 100% { height: 10px; }
+  50% { height: 25px; }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import Mascot from './components/Mascot';
 import useFocusTimer from './hooks/useFocusTimer';
@@ -21,6 +21,12 @@ const subjects = [
   { id: 'literature', label: { en: 'Librarian', es: 'Bibliotecario' }, icon: '📜' }
 ];
 
+const channels = [
+  { id: 'lofi', label: 'Lofi', url: 'https://stream.zeno.fm/f36p873hb8hvu' },
+  { id: 'rain', label: 'Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
+  { id: 'cafe', label: 'Cafe', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+];
+
 function App() {
   const [lang, setLang] = useState('en');
   const t = translations[lang];
@@ -29,6 +35,12 @@ function App() {
   const [selectedSubject, setSelectedSubject] = useState('general');
   const { secondsLeft, isActive, status, startTimer, resetTimer, setSecondsLeft } = useFocusTimer(sessionMins);
   const [history, setHistory] = useState([]);
+
+  // Audio Radio States
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.4);
+  const [currentChannel, setCurrentChannel] = useState(channels[0]);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     setHistory(JSON.parse(localStorage.getItem('focus_history') || '[]'));
@@ -39,6 +51,30 @@ function App() {
       setSecondsLeft(sessionMins);
     }
   }, [sessionMins, isActive]);
+
+  // Sync audio settings
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  const toggleMusic = () => {
+    if (audioRef.current.paused) {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error(e));
+    } else {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const changeChannel = (channel) => {
+    setCurrentChannel(channel);
+    setIsPlaying(false);
+    if (audioRef.current) {
+        audioRef.current.load();
+    }
+  };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -161,6 +197,38 @@ function App() {
         </div>
       </main>
 
+      <div className="glass-card" style={{ width: '100%', marginTop: '2rem', padding: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <div className={`visualizer ${isPlaying ? 'active' : ''}`} style={{ display: 'flex', gap: '3px', height: '30px', alignItems: 'flex-end' }}>
+                {[1,2,3,4,5].map(i => <div key={i} className="vis-bar" style={{ width: '4px', background: 'var(--primary)', borderRadius: '2px' }}></div>)}
+             </div>
+             <div>
+                <h4 style={{ fontSize: '0.9rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{currentChannel.label} • {isPlaying ? 'Playing' : 'Paused'}</p>
+             </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+             {channels.map(c => (
+               <button key={c.id} onClick={() => changeChannel(c)} style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', background: currentChannel.id === c.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: currentChannel.id === c.id ? 'var(--bg-deep)' : 'white' }}>
+                 {c.label}
+               </button>
+             ))}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+             <audio ref={audioRef} src={currentChannel.url} loop crossOrigin="anonymous" />
+             <button onClick={toggleMusic} className="glass-card" style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--primary)', color: 'var(--bg-deep)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {isPlaying ? <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>}
+             </button>
+             <div style={{ width: '100px' }}>
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(e.target.value)} style={{ width: '100%', accentColor: 'var(--primary)' }} />
+             </div>
+          </div>
+        </div>
+      </div>
+
       {status === 'broken' && (
         <div className="alert glass-card" style={{ 
           color: 'var(--accent)', 
@@ -171,18 +239,6 @@ function App() {
         }}>
           <h2 style={{ marginBottom: '0.5rem' }}>{t.brokenTitle}</h2>
           <p>{t.brokenDesc}</p>
-        </div>
-      )}
-
-      {status === 'success' && (
-        <div className="alert glass-card" style={{ 
-          color: '#10b981', 
-          border: '1px solid #10b981',
-          marginTop: '2rem',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ marginBottom: '0.5rem' }}>{t.successTitle}</h2>
-          <p>{t.successDesc}</p>
         </div>
       )}
 
@@ -203,46 +259,7 @@ function App() {
         </div>
       </section>
 
-      <div className="glass-card" style={{ width: '100%', marginTop: '2rem', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ padding: '0.8rem', background: 'var(--primary)', borderRadius: '50%', color: 'var(--bg-deep)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-          </div>
-          <div>
-            <h4 style={{ fontSize: '0.9rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{lang === 'en' ? 'Ambient sounds for deep work' : 'Sonidos ambientales para trabajar'}</p>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <audio id="ambient-audio" loop crossOrigin="anonymous">
-            <source src="https://stream.zeno.fm/f36p873hb8hvu" type="audio/mpeg" />
-          </audio>
-          <button 
-            id="play-button"
-            onClick={() => {
-              const audio = document.getElementById('ambient-audio');
-              const btn = document.getElementById('play-button');
-              if (audio.paused) {
-                audio.play().then(() => {
-                  audio.volume = 0.4;
-                  btn.innerText = lang === 'en' ? 'STOP MUSIC' : 'PARAR MÚSICA';
-                  btn.style.background = 'var(--accent)';
-                }).catch(e => console.error("Error playing audio:", e));
-              } else {
-                audio.pause();
-                btn.innerText = lang === 'en' ? 'PLAY LOFI' : 'REPRODUCIR LOFI';
-                btn.style.background = 'var(--primary)';
-              }
-            }}
-            className="glass-card"
-            style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem', fontWeight: 'bold', background: 'var(--primary)', color: 'var(--bg-deep)', minWidth: '140px' }}
-          >
-            {lang === 'en' ? 'PLAY LOFI' : 'REPRODUCIR LOFI'}
-          </button>
-        </div>
-      </div>
-
-      <div className="glass-card" style={{ width: '100%', marginTop: '1rem', padding: '1.5rem' }}>
+      <div className="glass-card" style={{ width: '100%', marginTop: '3rem', padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>{t.statsTitle}</h3>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>{t.statsSubtitle}</span>
