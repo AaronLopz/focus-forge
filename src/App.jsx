@@ -23,8 +23,8 @@ const subjects = [
 
 const channels = [
   { id: 'lofi', label: 'Lofi', url: 'https://stream.zeno.fm/f36p873hb8hvu' },
-  { id: 'rain', label: 'Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-  { id: 'cafe', label: 'Cafe', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
+  { id: 'rain', label: 'Rain', url: 'https://archive.org/download/rain_202209/rain.mp3' },
+  { id: 'nature', label: 'Nature', url: 'https://archive.org/download/nature-sounds-01/nature-sounds-01.mp3' }
 ];
 
 function App() {
@@ -36,10 +36,9 @@ function App() {
   const { secondsLeft, isActive, status, startTimer, resetTimer, setSecondsLeft } = useFocusTimer(sessionMins);
   const [history, setHistory] = useState([]);
 
-  // Audio Radio States
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
-  const [currentChannel, setCurrentChannel] = useState(channels[0]);
+  const [currentChannel, setCurrentChannel] = useState(channels[1]); // Default to Rain for stability
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -52,7 +51,6 @@ function App() {
     }
   }, [sessionMins, isActive]);
 
-  // Sync audio settings
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -61,7 +59,13 @@ function App() {
 
   const toggleMusic = () => {
     if (audioRef.current.paused) {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error(e));
+      audioRef.current.load();
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(e => {
+            console.error("Playback failed:", e);
+            setIsPlaying(false);
+        });
     } else {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -69,11 +73,16 @@ function App() {
   };
 
   const changeChannel = (channel) => {
-    setCurrentChannel(channel);
     setIsPlaying(false);
     if (audioRef.current) {
-        audioRef.current.load();
+        audioRef.current.pause();
     }
+    setCurrentChannel(channel);
+    setTimeout(() => {
+        if (audioRef.current) {
+            audioRef.current.load();
+        }
+    }, 100);
   };
 
   const formatTime = (seconds) => {
@@ -205,25 +214,29 @@ function App() {
              </div>
              <div>
                 <h4 style={{ fontSize: '0.9rem' }}>{lang === 'en' ? 'Focus Radio' : 'Radio de Enfoque'}</h4>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{currentChannel.label} • {isPlaying ? 'Playing' : 'Paused'}</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{currentChannel.label} • {isPlaying ? (lang === 'en' ? 'Playing' : 'Sonando') : (lang === 'en' ? 'Paused' : 'Pausado')}</p>
              </div>
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
              {channels.map(c => (
-               <button key={c.id} onClick={() => changeChannel(c)} style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', background: currentChannel.id === c.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: currentChannel.id === c.id ? 'var(--bg-deep)' : 'white' }}>
+               <button key={c.id} onClick={() => changeChannel(c)} style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.7rem', background: currentChannel.id === c.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: currentChannel.id === c.id ? 'var(--bg-deep)' : 'white', transition: '0.3s' }}>
                  {c.label}
                </button>
              ))}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
              <audio ref={audioRef} src={currentChannel.url} loop crossOrigin="anonymous" />
-             <button onClick={toggleMusic} className="glass-card" style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'var(--primary)', color: 'var(--bg-deep)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                {isPlaying ? <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>}
+             <button onClick={toggleMusic} className="glass-card" style={{ width: '55px', height: '55px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
+                {isPlaying ? 
+                  <svg width="24" height="24" fill="#0f172a" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : 
+                  <svg width="24" height="24" fill="#0f172a" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                }
              </button>
-             <div style={{ width: '100px' }}>
-                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(e.target.value)} style={{ width: '100%', accentColor: 'var(--primary)' }} />
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <svg width="16" height="16" fill="var(--text-dim)" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} style={{ width: '80px', accentColor: 'var(--primary)' }} />
              </div>
           </div>
         </div>
@@ -239,6 +252,18 @@ function App() {
         }}>
           <h2 style={{ marginBottom: '0.5rem' }}>{t.brokenTitle}</h2>
           <p>{t.brokenDesc}</p>
+        </div>
+      )}
+
+      {status === 'success' && (
+        <div className="alert glass-card" style={{ 
+          color: '#10b981', 
+          border: '1px solid #10b981',
+          marginTop: '2rem',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ marginBottom: '0.5rem' }}>{t.successTitle}</h2>
+          <p>{t.successDesc}</p>
         </div>
       )}
 
