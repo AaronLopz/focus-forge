@@ -22,9 +22,9 @@ const subjects = [
 ];
 
 const channels = [
+  { id: 'rain', label: 'Rain', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
   { id: 'lofi', label: 'Lofi', url: 'https://stream.zeno.fm/f36p873hb8hvu' },
-  { id: 'rain', label: 'Rain', url: 'https://archive.org/download/rain_202209/rain.mp3' },
-  { id: 'nature', label: 'Nature', url: 'https://archive.org/download/nature-sounds-01/nature-sounds-01.mp3' }
+  { id: 'nature', label: 'Nature', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' }
 ];
 
 function App() {
@@ -38,8 +38,8 @@ function App() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.4);
-  const [currentChannel, setCurrentChannel] = useState(channels[1]); // Default to Rain for stability
-  const audioRef = useRef(null);
+  const [currentChannel, setCurrentChannel] = useState(channels[0]);
+  const audioRef = useRef(new Audio(channels[0].url));
 
   useEffect(() => {
     setHistory(JSON.parse(localStorage.getItem('focus_history') || '[]'));
@@ -52,19 +52,17 @@ function App() {
   }, [sessionMins, isActive]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume;
-    }
+    audioRef.current.volume = volume;
+    audioRef.current.loop = true;
   }, [volume]);
 
   const toggleMusic = () => {
     if (audioRef.current.paused) {
-      audioRef.current.load();
       audioRef.current.play()
         .then(() => setIsPlaying(true))
         .catch(e => {
-            console.error("Playback failed:", e);
-            setIsPlaying(false);
+            alert("Please click anywhere on the page first to enable audio!");
+            console.error(e);
         });
     } else {
       audioRef.current.pause();
@@ -73,16 +71,12 @@ function App() {
   };
 
   const changeChannel = (channel) => {
-    setIsPlaying(false);
-    if (audioRef.current) {
-        audioRef.current.pause();
-    }
+    audioRef.current.pause();
+    audioRef.current = new Audio(channel.url);
+    audioRef.current.volume = volume;
+    audioRef.current.loop = true;
     setCurrentChannel(channel);
-    setTimeout(() => {
-        if (audioRef.current) {
-            audioRef.current.load();
-        }
-    }, 100);
+    setIsPlaying(false);
   };
 
   const formatTime = (seconds) => {
@@ -227,15 +221,11 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-             <audio ref={audioRef} src={currentChannel.url} loop crossOrigin="anonymous" />
-             <button onClick={toggleMusic} className="glass-card" style={{ width: '55px', height: '55px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
-                {isPlaying ? 
-                  <svg width="24" height="24" fill="#0f172a" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg> : 
-                  <svg width="24" height="24" fill="#0f172a" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                }
+             <button onClick={toggleMusic} className="glass-card" style={{ width: '55px', height: '55px', borderRadius: '50%', background: 'var(--primary)', color: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer', fontSize: '24px', fontWeight: 'bold' }}>
+                {isPlaying ? '⏸' : '▶'}
              </button>
              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <svg width="16" height="16" fill="var(--text-dim)" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                <span style={{ fontSize: '18px' }}>🔊</span>
                 <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVolume(parseFloat(e.target.value))} style={{ width: '80px', accentColor: 'var(--primary)' }} />
              </div>
           </div>
