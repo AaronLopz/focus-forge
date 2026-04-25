@@ -1,16 +1,23 @@
-# React + Vite
+# ⏱️ FocusForge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-performance Deep Work timer with a "Focus Enforcement" system and subject-specific AI guardians.
 
-Currently, two official plugins are available:
+## 🚀 Features
+- **Strict Mode:** Resets if you leave the tab or window.
+- **Subject Guardians:** 5 unique robot designs for Math, Science, Languages, and Literature.
+- **Customizable:** Adjust time and subject to fit your study session.
+- **Stats Dashboard:** Track your concentration history locally.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Tech Stack
+- **React + Vite**
+- **Vanilla CSS (Glassmorphism)**
+- **Page Visibility & Blur API**
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📦 Deployment (The Pro Way)
+1. Create a new repository on GitHub.
+2. Link your local repo:
+   ```bash
+   git remote add origin https://github.com/your-username/focus-forge.git
+   git push -u origin master
+   ```
+3. Connect the repo to **Netlify** for automatic CI/CD.
